@@ -12,25 +12,40 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+/**
+ * The service for the business logic of the receipt service.
+ */
 @Service
+@AllArgsConstructor
 public class ReceiptService {
 
   @Autowired
   private InMemoryDB db;
 
+  /**
+   * Processes the receipt by calculating the points of the receipt using specific rules and saving the points with a randomly generated UUID.
+   * @param receipt: {@link Receipt}
+   * @return {@link ProcessResponse}
+   */
   public ProcessResponse processReceipt(@Valid Receipt receipt) {
+    // Get a random UUID for this receipt
     UUID id = UUID.randomUUID();
-    int score = pointsCalculator(receipt);
-
-    UUID returnedId = db.addReceipt(id, score);
+    // calculate the points of this receipt
+    int points = pointsCalculator(receipt);
+    // save the id and points in the database
+    UUID returnedId = db.addReceipt(id, points);
 
     return new ProcessResponse(returnedId.toString());
   }
 
   public PointsResponse getPointsFromReceiptId(UUID id) throws IdNotFoundException {
+    // check if id is present in the database,
+    // if present then return a PointsResponse object with the associated points,
+    // else throw an IdNotFoundException
     if (db.getPoint(id).isPresent()) {
       int points = db.getPoint(id).get();
       return new PointsResponse(points);
@@ -39,9 +54,10 @@ public class ReceiptService {
     }
   }
 
+  // calculate the points by using the running sum of all the rules listed
   private int pointsCalculator(Receipt receipt) {
     int points = 0;
-    points += this.alphanumericCharacterPoints(receipt.getRetailer());
+    points += alphanumericCharacterPoints(receipt.getRetailer());
     points += isTotalRoundPoints(receipt.getTotal());
     points += isTotalMultipleOf25CentsPoints(receipt.getTotal());
     points += everyTwoItemsPoints(receipt.getItems());
@@ -52,6 +68,7 @@ public class ReceiptService {
   }
 
   private int alphanumericCharacterPoints(String retailer) {
+    // get only the alphanumeric characters in retailer
     String alphanumericRetailer = retailer.replaceAll("[^a-zA-Z0-9]", "");
     return alphanumericRetailer.length();
   }

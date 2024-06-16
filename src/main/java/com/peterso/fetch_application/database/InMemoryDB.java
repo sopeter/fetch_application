@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Example in memory repository to hold associate the points for a receipt id.
+ * Contains basic functionality and acts as Proof of Concept.
+ */
 @Repository
 public class InMemoryDB {
 
